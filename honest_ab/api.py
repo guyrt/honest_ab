@@ -1,5 +1,5 @@
 from importlib import import_module
-from honest_ab.binning_functions.base import HONEST_AB_SKIP_TYPE
+from honest_ab.binning_functions.base import HONEST_AB_SKIP_TYPE, HONEST_AB_COOKIE_KEY
 
 from honest_ab.models import Experiment, GoalAchieved, Goal, ExperimentAllocation
 
@@ -24,17 +24,32 @@ def _get_backend_class(import_path):
         raise ImproperlyConfigured('Honest_ab backend module "%s" does not define a "%s" class.' % (module, classname))
 
 
-def get_experiment_bin(obj, experiment_slug):
+def _fake_return_context(experiment_slug, context):
+    if not context:
+        context = dict()
+    if HONEST_AB_COOKIE_KEY not in context:
+        context[HONEST_AB_COOKIE_KEY] = dict()
+
+    context[HONEST_AB_COOKIE_KEY][experiment_slug] = HONEST_AB_SKIP_TYPE
+    if '__cache__' not in context[HONEST_AB_COOKIE_KEY]:
+        context[HONEST_AB_COOKIE_KEY]['__cache__'] = dict()
+    return context
+
+
+def get_experiment_bin(obj, experiment_slug, request=None, context=None):
+    """
+    Retrieve bin for an Experiment and an object.
+    """
     try:
         experiment = Experiment.objects.get(slug=experiment_slug)
     except Experiment.DoesNotExist:
-        return HONEST_AB_SKIP_TYPE
+        return _fake_return_context(experiment_slug, context)
 
     if experiment.active:
         bin_obj = _get_backend_class(experiment.decision_class)()
-        return bin_obj.bin(obj, experiment)
+        return bin_obj.bin(obj, experiment, request, context)
     else:
-        return HONEST_AB_SKIP_TYPE
+        return _fake_return_context(experiment_slug, context)
 
 
 def goal_achieved(goal_id=None, goal_slug=None, **kwargs):

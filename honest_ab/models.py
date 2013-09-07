@@ -10,14 +10,14 @@ class SlugReplacementMixin(object):
         if not self.slug:
             self.slug = slugify(self.name)
             i = 0
-            while ExperimentLayer.objects.filter(slug=self.slug).exists:
+            while self.__class__.objects.filter(slug=self.slug).exists():
                 self.slug = slugify(self.name) + '_' + str(i)
         super(SlugReplacementMixin, self).save(force_insert, force_update, using)
 
 
-class ExperimentLayer(SlugReplacementMixin, models.Model):
+class ExperimentDomain(SlugReplacementMixin, models.Model):
     """
-    An experiment layer is a set of experiments that are non-overlapping. A model
+    An experiment domain is a set of experiments that are non-overlapping. A model
     can only be associated with one experiment in an experiment layer.
     """
 
@@ -60,7 +60,7 @@ class Experiment(SlugReplacementMixin, models.Model):
     # CachedExperimentBinningHandler
     decision_class = models.CharField(choices=binning_choices.choices, max_length=255)
 
-    layer = models.ForeignKey(ExperimentLayer)
+    domain = models.ForeignKey(ExperimentDomain)
 
     def __unicode__(self):
         return self.slug
@@ -77,13 +77,13 @@ class ExperimentAllocation(models.Model):
     experiment = models.ForeignKey(Experiment)
     model = models.CharField(max_length=128)
     model_pk = models.BigIntegerField()
-    group = models.CharField(max_length=16)
+    classification = models.CharField(max_length=16)
 
     class Meta(object):
         unique_together = ('model_pk', 'model', 'experiment')
 
     def __unicode__(self):
-        return "{0} {1} {2} {3}".format(self.experiment, self.model, self.model_pk, self.group)
+        return "{0} {1} {2} {3}".format(self.experiment, self.model, self.model_pk, self.classification)
 
 
 class Goal(SlugReplacementMixin, models.Model):

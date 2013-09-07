@@ -1,5 +1,6 @@
 TODO:
 
+ * Model - ExperimentLayer matching.
  * Filters plus auto discover
  * Aggregators (multi-armed bandit)
  * Bot exclusion

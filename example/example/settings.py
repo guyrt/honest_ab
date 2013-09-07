@@ -77,7 +77,6 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -87,7 +86,6 @@ SECRET_KEY = '&$+nu*icn&_g24_)-rj1auw_w%1p%$xh#u78#8s6#vxfmr(92n'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -98,6 +96,9 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    # Honest AB middleware.
+    'honest_ab.middleware.HonestABMiddleware'
 )
 
 ROOT_URLCONF = 'example.urls'
@@ -118,11 +119,11 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'honest_ab',
-
     'django_extensions',
     'django.contrib.admin',
+
+    'honest_ab',
+    'tested_app',
     'south'
 )
 

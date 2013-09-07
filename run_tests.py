@@ -5,10 +5,10 @@
 
 import sys
 import os
-from os.path import dirname, abspath
+from os.path import dirname, abspath, join
 from optparse import OptionParser
 
-from django.conf import settings, global_settings
+from django.conf import settings
 
 # For convenience configure settings if they are not pre-configured or if we
 # haven't been provided settings to use by environment variable.
@@ -27,11 +27,11 @@ if not settings.configured and not os.environ.get('DJANGO_SETTINGS_MODULE'):
             'django.contrib.sites',
 
             'honest_ab',
-
             'tests',
+            'south'
         ],
         ROOT_URLCONF='',
-        DEBUG=False,
+        DEBUG=True,
         SITE_ID=1,
     )
 

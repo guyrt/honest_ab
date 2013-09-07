@@ -1,9 +1,9 @@
 from django.contrib import admin
 from honest_ab.forms import ExperimentForm
-from honest_ab.models import Experiment, ExperimentAllocation, ExperimentLayer, GoalAchieved, Goal
+from honest_ab.models import Experiment, ExperimentAllocation, ExperimentDomain, GoalAchieved, Goal
 
 
-class ExperimentLayerAdmin(admin.ModelAdmin):
+class ExperimentDomainAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_added'
     fields = ('name', 'active', 'slug')
     list_display = fields
@@ -13,16 +13,16 @@ class ExperimentLayerAdmin(admin.ModelAdmin):
 
 class ExperimentAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_added'
-    fields = ('name', 'active', 'slug', 'layer', 'decision_class', 'number_of_classes', 'percentage_of_traffic')
+    fields = ('name', 'active', 'slug', 'domain', 'decision_class', 'number_of_classes', 'percentage_of_traffic')
     list_display = fields
     search_fields = ('slug', 'decision_class')
-    list_filter = ('active', 'decision_class', 'layer')
+    list_filter = ('active', 'decision_class', 'domain')
     form = ExperimentForm
 
 
 class ExperimentAllocationAdmin(admin.ModelAdmin):
     date_hierarchy = 'date_added'
-    fields = ('experiment', 'model', 'model_pk', 'group')
+    fields = ('experiment', 'model', 'model_pk', 'classification')
     list_display = fields
     list_select_related = True
     search_fields = ('experiment__slug', 'model', 'model_pk')
@@ -46,7 +46,7 @@ class GoalAchievedAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Experiment, ExperimentAdmin)
-admin.site.register(ExperimentLayer, ExperimentLayerAdmin)
+admin.site.register(ExperimentDomain, ExperimentDomainAdmin)
 admin.site.register(ExperimentAllocation, ExperimentAllocationAdmin)
 admin.site.register(GoalAchieved)
 admin.site.register(Goal, GoalAdmin)

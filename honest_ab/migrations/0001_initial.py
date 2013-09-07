@@ -8,8 +8,8 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'ExperimentLayer'
-        db.create_table(u'honest_ab_experimentlayer', (
+        # Adding model 'ExperimentDomain'
+        db.create_table(u'honest_ab_experimentdomain', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('active', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('date_added', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
@@ -17,7 +17,7 @@ class Migration(SchemaMigration):
             ('name', self.gf('django.db.models.fields.CharField')(max_length=128)),
             ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=64)),
         ))
-        db.send_create_signal(u'honest_ab', ['ExperimentLayer'])
+        db.send_create_signal(u'honest_ab', ['ExperimentDomain'])
 
         # Adding model 'Experiment'
         db.create_table(u'honest_ab_experiment', (
@@ -30,7 +30,7 @@ class Migration(SchemaMigration):
             ('number_of_classes', self.gf('django.db.models.fields.PositiveIntegerField')(default=2)),
             ('percentage_of_traffic', self.gf('django.db.models.fields.FloatField')(default=100.0)),
             ('decision_class', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('layer', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['honest_ab.ExperimentLayer'])),
+            ('domain', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['honest_ab.ExperimentDomain'])),
         ))
         db.send_create_signal(u'honest_ab', ['Experiment'])
 
@@ -42,7 +42,7 @@ class Migration(SchemaMigration):
             ('experiment', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['honest_ab.Experiment'])),
             ('model', self.gf('django.db.models.fields.CharField')(max_length=128)),
             ('model_pk', self.gf('django.db.models.fields.BigIntegerField')()),
-            ('group', self.gf('django.db.models.fields.CharField')(max_length=16)),
+            ('classification', self.gf('django.db.models.fields.CharField')(max_length=16)),
         ))
         db.send_create_signal(u'honest_ab', ['ExperimentAllocation'])
 
@@ -75,8 +75,8 @@ class Migration(SchemaMigration):
         # Removing unique constraint on 'ExperimentAllocation', fields ['model_pk', 'model', 'experiment']
         db.delete_unique(u'honest_ab_experimentallocation', ['model_pk', 'model', 'experiment_id'])
 
-        # Deleting model 'ExperimentLayer'
-        db.delete_table(u'honest_ab_experimentlayer')
+        # Deleting model 'ExperimentDomain'
+        db.delete_table(u'honest_ab_experimentdomain')
 
         # Deleting model 'Experiment'
         db.delete_table(u'honest_ab_experiment')
@@ -98,8 +98,8 @@ class Migration(SchemaMigration):
             'date_added': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'date_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'decision_class': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'domain': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['honest_ab.ExperimentDomain']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'layer': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['honest_ab.ExperimentLayer']"}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'number_of_classes': ('django.db.models.fields.PositiveIntegerField', [], {'default': '2'}),
             'percentage_of_traffic': ('django.db.models.fields.FloatField', [], {'default': '100.0'}),
@@ -107,16 +107,16 @@ class Migration(SchemaMigration):
         },
         u'honest_ab.experimentallocation': {
             'Meta': {'unique_together': "(('model_pk', 'model', 'experiment'),)", 'object_name': 'ExperimentAllocation'},
+            'classification': ('django.db.models.fields.CharField', [], {'max_length': '16'}),
             'date_added': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'date_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'experiment': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['honest_ab.Experiment']"}),
-            'group': ('django.db.models.fields.CharField', [], {'max_length': '16'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'model_pk': ('django.db.models.fields.BigIntegerField', [], {})
         },
-        u'honest_ab.experimentlayer': {
-            'Meta': {'object_name': 'ExperimentLayer'},
+        u'honest_ab.experimentdomain': {
+            'Meta': {'object_name': 'ExperimentDomain'},
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'date_added': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'date_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),

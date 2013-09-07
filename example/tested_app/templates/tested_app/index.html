@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+{% if skip %}
+    No experiment found. Add an experiment with slug "city" to see experiment in action.
+{% else %}
+    I heard you like the <br>
+    {% if baseball %}
+    {{baseball}} <br>
+    {% endif %}
+    {% if hockey %}
+    {{hockey}} <br>
+    {% endif %}
+    {% if basketball %}
+    {{basketball}} <br>
+    {% endif %}
+{% endif %}
+
+</body>
+</html>

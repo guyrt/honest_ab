@@ -7,26 +7,67 @@ except AttributeError:
     HONEST_AB_SKIP_TYPE = 'skip'
 
 
+try:
+    HONEST_AB_COOKIE_KEY = settings.HONEST_AB_COOKIE_KEY
+except AttributeError:
+    HONEST_AB_COOKIE_KEY = 'honest_ab_experiments'
+
+
 class CachedExperimentBinningHandlerBase(object):
 
     description = "Abstract base class."
+    cookie_prefix = str(hash("HONEST_AB_"))
 
-    def bin(self, obj, experiment):
-        """
-        Return the proper bin for an object.
+    def _get_cookie_cache(self, obj, experiment, request):
+        key = CachedExperimentBinningHandlerBase.cookie_prefix + self._cookie_key(obj, experiment)
+        return request.get_signed_cookie(key, False, salt=str(experiment.pk))
 
-        Use cache if it exists.
+    def _set_context(self, obj, experiment, context, new_value):
         """
+        Add an experiment to the context dict.
+
+        Encapsulate everything in a top level key defined by the module.
+
+        Note that the __cache__ values are only used by the cookie-setting middleware.
+        """
+        key = CachedExperimentBinningHandlerBase.cookie_prefix + self._cookie_key(obj, experiment)
+        if HONEST_AB_COOKIE_KEY not in context:
+            context[HONEST_AB_COOKIE_KEY] = dict()
+        if '__cache__' not in context[HONEST_AB_COOKIE_KEY]:
+            context[HONEST_AB_COOKIE_KEY]['__cache__'] = dict()
+        context[HONEST_AB_COOKIE_KEY][experiment.slug] = new_value
+        context[HONEST_AB_COOKIE_KEY]['__cache__'][key] = {
+            'value': new_value,
+            'salt': str(experiment.pk)
+        }
+        return context
+
+    def bin(self, obj, experiment, request=None, context=None):
+        """
+        Return an updated context with the appropriate grouping.
+
+        If request is an HttpRequest object, use cookies as cache.
+        """
+        if context is None:
+            context = {}
+
+        if request:
+            cookie_cache = self._get_cookie_cache(obj, experiment, request)
+            if cookie_cache:
+                context = self._set_context(obj, experiment, context, cookie_cache)
+                return context
+
         from honest_ab.models import ExperimentAllocation
 
         object_name = '.'.join([str(obj.__class__.__module__), str(obj.__class__.__name__)])
-        import ipdb; ipdb.set_trace()
         try:
-            return ExperimentAllocation.objects.get(
+            result = ExperimentAllocation.objects.get(
                 model_pk=obj.pk,
-                model=str(obj.__class__),
+                model=object_name,
                 experiment=experiment
-            ).group
+            ).classification
+            context = self._set_context(obj, experiment, context, result)
+            return context
         except ExperimentAllocation.DoesNotExist:
             result = self._make_decision(obj, experiment)
             try:
@@ -34,21 +75,27 @@ class CachedExperimentBinningHandlerBase(object):
                     experiment=experiment,
                     model=object_name,
                     model_pk=obj.pk,
-                    group=result
+                    classification=result
                 )
             except IntegrityError:
                 # This can occur in high traffic instances where two threads hit this method
                 # at the same time. Both will fail the get and both will try to create.
-                return ExperimentAllocation.objects.get(
+                result = ExperimentAllocation.objects.get(
                     model_pk=obj.pk,
                     model=object_name,
                     experiment=experiment
-                ).group
+                ).classification
+                context = self._set_context(obj, experiment, context, result)
+                return context
             else:
-                return result
+                context = self._set_context(obj, experiment, context, result)
+                return context
 
     def _make_decision(self, obj, experiment):
-        raise NotImplementedError("Your binning handler must decide how to bin users.")
+        raise NotImplementedError("Your binning handler must decide how to bin obj.")
+
+    def _cookie_key(self, obj, experiment):
+        raise NotImplementedError("Your binning handler must decide a cookie key.")
 
 
 class _BinningClassChoices(object):
