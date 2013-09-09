@@ -4,16 +4,18 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 
 from honest_ab.api import get_experiment_bin
-from honest_ab.binning_functions.base import CachedExperimentBinningHandlerBase, HONEST_AB_COOKIE_KEY
+from honest_ab.binning_functions.base import CachedExperimentBinningHandlerBase, HONEST_AB_COOKIE_KEY, CachedExperimentDomainChooser
 from honest_ab.middleware import HonestABMiddleware
-from honest_ab.models import ExperimentDomain, Experiment
+from honest_ab.models import ExperimentDomain, Experiment, ExperimentDomainAllocation
 
 
 rf = RequestFactory()
 
 
 class FakeObj(object):
-    pk = 42
+
+    def __init__(self, pk=42):
+        self.pk = pk
 
 
 class FakeBinningFunction(CachedExperimentBinningHandlerBase):
@@ -23,6 +25,61 @@ class FakeBinningFunction(CachedExperimentBinningHandlerBase):
 
     def _make_decision(self, obj, experiment):
         return "1"
+
+
+class DomainChooserTestCases(TestCase):
+
+    def setUp(self):
+        super(DomainChooserTestCases, self).setUp()
+        self.default_domain = ExperimentDomain.objects.get()
+
+    def test_retrieve_cached_domain(self):
+        obj = FakeObj(200)
+        object_name = '.'.join([str(obj.__class__.__module__), str(obj.__class__.__name__)])
+        ExperimentDomainAllocation.objects.create(
+            experiment_domain=self.default_domain,
+            model=object_name,
+            model_pk=200
+        )
+        experiment = Experiment.objects.create(
+            domain=self.default_domain,
+            slug="testtest"
+        )
+        self.assertTrue(CachedExperimentDomainChooser().check_domain(obj, experiment))
+        self.assertEqual(1, ExperimentDomainAllocation.objects.count())
+
+    def test_create_new_domain(self):
+        # With no assigned domains, create one.
+        experiment = Experiment.objects.create(
+            domain=self.default_domain,
+            slug="testtest"
+        )
+        self.assertTrue(CachedExperimentDomainChooser().check_domain(FakeObj(100), experiment))
+        domain_cache = ExperimentDomainAllocation.objects.get()
+        self.assertEqual(domain_cache.model_pk, 100)
+        self.assertEqual(domain_cache.experiment_domain, self.default_domain)
+
+    def test_multiple_domains(self):
+        # Add second domain (so there will be two)
+        # Verify that some tests go to each.
+        new_domain = ExperimentDomain.objects.create(
+            name="second",
+            slug="second"
+        )
+        experiment = Experiment.objects.create(
+            domain=new_domain,
+            slug="testtest"
+        )
+
+        result_counter = {
+            True: 0,
+            False: 0
+        }
+        for i in range(100):
+            result_counter[CachedExperimentDomainChooser().check_domain(FakeObj(i * 100), experiment)] += 1
+        self.assertGreater(result_counter[True], 30)
+        self.assertGreater(result_counter[False], 30)
+
 
 
 class ApiTestCases(TestCase):
@@ -72,7 +129,3 @@ class CookieTests(TestCase):
         for key, value in context[HONEST_AB_COOKIE_KEY]['__cache__'].iteritems():
             cookie_value = response.cookies.get(key)
             self.assertIsNotNone(cookie_value)
-
-    def test_uses_cookie_if_set(self):
-        # Set cookie with view then mock call to get data.
-        pass

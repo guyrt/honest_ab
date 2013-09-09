@@ -18,7 +18,7 @@ class SlugReplacementMixin(object):
 class ExperimentDomain(SlugReplacementMixin, models.Model):
     """
     An experiment domain is a set of experiments that are non-overlapping. A model
-    can only be associated with one experiment in an experiment layer.
+    can only be associated with one experiment in an experiment domain.
     """
 
     active = models.BooleanField(default=True, help_text='Set to false if the instance is deleted.')
@@ -31,6 +31,25 @@ class ExperimentDomain(SlugReplacementMixin, models.Model):
 
     def __unicode__(self):
         return self.slug
+
+
+class ExperimentDomainAllocation(models.Model):
+    """
+    Record of caching an object into an experiment domain assignment.
+    """
+
+    date_added = models.DateTimeField(auto_now_add=True)
+    date_modified = models.DateTimeField(auto_now=True)
+
+    experiment_domain = models.ForeignKey(ExperimentDomain)
+    model = models.CharField(max_length=128)
+    model_pk = models.BigIntegerField()
+
+    class Meta(object):
+        unique_together = ('model_pk', 'model', 'experiment_domain')
+
+    def __unicode__(self):
+        return "{0} {1} {2}".format(self.experiment_domain, self.model, self.model_pk)
 
 
 class Experiment(SlugReplacementMixin, models.Model):

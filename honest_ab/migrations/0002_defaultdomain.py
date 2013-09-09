@@ -26,8 +26,8 @@ class Migration(DataMigration):
             'date_added': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'date_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'decision_class': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'domain': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['honest_ab.ExperimentDomain']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'layer': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['honest_ab.ExperimentDomain']"}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'number_of_classes': ('django.db.models.fields.PositiveIntegerField', [], {'default': '2'}),
             'percentage_of_traffic': ('django.db.models.fields.FloatField', [], {'default': '100.0'}),
@@ -51,6 +51,15 @@ class Migration(DataMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '64'})
+        },
+        u'honest_ab.experimentdomainallocation': {
+            'Meta': {'unique_together': "(('model_pk', 'model', 'experiment_domain'),)", 'object_name': 'ExperimentDomainAllocation'},
+            'date_added': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'date_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'experiment_domain': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['honest_ab.ExperimentDomain']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'model': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
+            'model_pk': ('django.db.models.fields.BigIntegerField', [], {})
         },
         u'honest_ab.goal': {
             'Meta': {'object_name': 'Goal'},

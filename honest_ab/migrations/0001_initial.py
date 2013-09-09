@@ -19,6 +19,20 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(u'honest_ab', ['ExperimentDomain'])
 
+        # Adding model 'ExperimentDomainAllocation'
+        db.create_table(u'honest_ab_experimentdomainallocation', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('date_added', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
+            ('date_modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
+            ('experiment_domain', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['honest_ab.ExperimentDomain'])),
+            ('model', self.gf('django.db.models.fields.CharField')(max_length=128)),
+            ('model_pk', self.gf('django.db.models.fields.BigIntegerField')()),
+        ))
+        db.send_create_signal(u'honest_ab', ['ExperimentDomainAllocation'])
+
+        # Adding unique constraint on 'ExperimentDomainAllocation', fields ['model_pk', 'model', 'experiment_domain']
+        db.create_unique(u'honest_ab_experimentdomainallocation', ['model_pk', 'model', 'experiment_domain_id'])
+
         # Adding model 'Experiment'
         db.create_table(u'honest_ab_experiment', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -75,8 +89,14 @@ class Migration(SchemaMigration):
         # Removing unique constraint on 'ExperimentAllocation', fields ['model_pk', 'model', 'experiment']
         db.delete_unique(u'honest_ab_experimentallocation', ['model_pk', 'model', 'experiment_id'])
 
+        # Removing unique constraint on 'ExperimentDomainAllocation', fields ['model_pk', 'model', 'experiment_domain']
+        db.delete_unique(u'honest_ab_experimentdomainallocation', ['model_pk', 'model', 'experiment_domain_id'])
+
         # Deleting model 'ExperimentDomain'
         db.delete_table(u'honest_ab_experimentdomain')
+
+        # Deleting model 'ExperimentDomainAllocation'
+        db.delete_table(u'honest_ab_experimentdomainallocation')
 
         # Deleting model 'Experiment'
         db.delete_table(u'honest_ab_experiment')
@@ -123,6 +143,15 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '64'})
+        },
+        u'honest_ab.experimentdomainallocation': {
+            'Meta': {'unique_together': "(('model_pk', 'model', 'experiment_domain'),)", 'object_name': 'ExperimentDomainAllocation'},
+            'date_added': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'date_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'experiment_domain': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['honest_ab.ExperimentDomain']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'model': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
+            'model_pk': ('django.db.models.fields.BigIntegerField', [], {})
         },
         u'honest_ab.goal': {
             'Meta': {'object_name': 'Goal'},
