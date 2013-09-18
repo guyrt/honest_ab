@@ -1,4 +1,3 @@
-from django.http.response import HttpResponse
 from django.template.response import SimpleTemplateResponse
 from django.test import TestCase
 from django.test.client import RequestFactory
@@ -79,7 +78,6 @@ class DomainChooserTestCases(TestCase):
             result_counter[CachedExperimentDomainChooser().check_domain(FakeObj(i * 100), experiment)] += 1
         self.assertGreater(result_counter[True], 30)
         self.assertGreater(result_counter[False], 30)
-
 
 
 class ApiTestCases(TestCase):

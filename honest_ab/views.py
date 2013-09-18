@@ -24,4 +24,3 @@ class GoalAchievedFormView(FormView):
 
     def form_valid(self, form):
         goal_achieved(self.kwargs['goal_id'], **form.cleaned_data)
-
