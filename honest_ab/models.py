@@ -1,8 +1,6 @@
 from django.db import models
 from django.template.defaultfilters import slugify
 
-from honest_ab.binning_functions.base import binning_choices
-
 
 class SlugReplacementMixin(object):
 
@@ -26,30 +24,14 @@ class ExperimentDomain(SlugReplacementMixin, models.Model):
     date_added = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
-    name = models.CharField(max_length=128)
-    slug = models.SlugField(max_length=64, unique=True)
+    name = models.CharField(max_length=128, help_text="Human readable name.")
+    slug = models.SlugField(max_length=64, unique=True, help_text="Used as salt. Must be unique.")
+    num_buckets = models.PositiveIntegerField(default=1000)
+
+    experimental_unit_resolver = models.CharField(max_length=255)
 
     def __unicode__(self):
-        return self.slug
-
-
-class ExperimentDomainAllocation(models.Model):
-    """
-    Record of caching an object into an experiment domain assignment.
-    """
-
-    date_added = models.DateTimeField(auto_now_add=True)
-    date_modified = models.DateTimeField(auto_now=True)
-
-    experiment_domain = models.ForeignKey(ExperimentDomain)
-    model = models.CharField(max_length=128)
-    model_pk = models.BigIntegerField()
-
-    class Meta(object):
-        unique_together = ('model_pk', 'model', 'experiment_domain')
-
-    def __unicode__(self):
-        return "{0} {1} {2}".format(self.experiment_domain, self.model, self.model_pk)
+        return "domain {0} using {1}".format(self.name, self.decision_class)
 
 
 class Experiment(SlugReplacementMixin, models.Model):
@@ -64,10 +46,7 @@ class Experiment(SlugReplacementMixin, models.Model):
     date_modified = models.DateTimeField(auto_now=True)
 
     name = models.CharField(max_length=128)
-    slug = models.SlugField(max_length=64, unique=True)
-
-    # This is 2 for a standard A/B test.
-    number_of_classes = models.PositiveIntegerField(default=2)
+    slug = models.SlugField(max_length=64, unique=True, name="Experiment-specific salt")
 
     percentage_of_traffic = models.FloatField(
         verbose_name=u"Percentage of eligible traffic to be assigned to this experiment.  "
@@ -75,34 +54,30 @@ class Experiment(SlugReplacementMixin, models.Model):
         default=100.0
     )
 
-    # Class to use as decision function. Should be subclass of
-    # CachedExperimentBinningHandler
-    decision_class = models.CharField(choices=binning_choices.choices, max_length=255)
-
     domain = models.ForeignKey(ExperimentDomain)
+    buckets = models.CharField(max_length=255)  # todo - set these on save?
 
     def __unicode__(self):
         return self.slug
 
 
-class ExperimentAllocation(models.Model):
-    """
-    Record of caching an experiment into 1 group for a single experiment.
-    """
+class Treatment(models.Model):
+
+    active = models.BooleanField(default=True)
 
     date_added = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
-    experiment = models.ForeignKey(Experiment)
-    model = models.CharField(max_length=128)
-    model_pk = models.BigIntegerField()
-    classification = models.CharField(max_length=16)
+    percentage_of_traffic = models.FloatField(
+        verbose_name="By default, this is set to 1/N for N treatments in an experiment",
+        default=None
+    )
 
-    class Meta(object):
-        unique_together = ('model_pk', 'model', 'experiment')
+    name = models.CharField(max_length=255)
 
-    def __unicode__(self):
-        return "{0} {1} {2} {3}".format(self.experiment, self.model, self.model_pk, self.classification)
+"""
+Handle goals, which is an optional feature for tracking specific actions.
+"""
 
 
 class Goal(SlugReplacementMixin, models.Model):
@@ -130,7 +105,4 @@ class GoalAchieved(models.Model):
     """
 
     date_added = models.DateTimeField(auto_now_add=True)
-    date_modified = models.DateTimeField(auto_now=True)
-
-    experiment_allocation = models.ForeignKey(ExperimentAllocation)
     goal = models.ForeignKey(Goal)

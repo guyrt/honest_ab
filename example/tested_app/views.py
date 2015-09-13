@@ -1,7 +1,5 @@
 import random
 from django.views.generic.base import TemplateView
-from honest_ab.api import get_experiment_bin
-from honest_ab.binning_functions.base import HONEST_AB_COOKIE_KEY, HONEST_AB_SKIP_TYPE
 
 
 class FakeObject(object):
@@ -18,18 +16,19 @@ class BasicView(TemplateView):
         """
         Sample context data.
         """
-        context = get_experiment_bin(FakeObject(), 'city', self.request)
+        city_experiment = self.request.honest_ab_resolver['frontend']
 
         # Use the results to set more context:
-        if context[HONEST_AB_COOKIE_KEY]['city'] == HONEST_AB_SKIP_TYPE:
+        context = dict()
+        if city_experiment is None:
             # This means no test was set up.
             context['skip'] = True
-        elif context[HONEST_AB_COOKIE_KEY]['city'] == '0':
+        elif city_experiment == 'CityTreatment':
             # Toronto!
             context['baseball'] = 'Blue Jays'
             context['hockey'] = 'Maple Leafs'
             context['basketball'] = 'Raptors'
-        elif context[HONEST_AB_COOKIE_KEY]['city'] == '1':
+        elif city_experiment == 'CityControl':
             # Seattle!
             context['baseball'] = 'Mariners'
             context['hockey'] = None

@@ -95,7 +95,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     # Honest AB middleware.
     'honest_ab.middleware.HonestABMiddleware'
@@ -123,8 +123,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
 
     'honest_ab',
-    'tested_app',
-    'south'
+    'tested_app'
 )
 
 # A sample logging configuration. The only tangible logging
@@ -155,3 +154,10 @@ LOGGING = {
         },
     }
 }
+
+
+# Set the resolver
+# called like
+# k = import_module('.'.join(settings.HONEST_AB_UNIT_RESOLVER.split('.')[:-1]))
+# getattr(k, settings.HONEST_AB_UNIT_RESOLVER.split('.')[-1])(request)
+HONEST_AB_UNIT_RESOLVER = "honest_ab.unit_resolvers.cookie_resolver"
