@@ -22,6 +22,7 @@ class HonestABResolver(object):
         self.load_time = datetime.min
         self.domains = dict()
         self.treatments = dict()
+        self.experiment_domain_map = dict()
 
     def load(self):
         """
@@ -31,8 +32,10 @@ class HonestABResolver(object):
 
         domains = dict()
         treatments = dict()
+        experiment_domain_map = dict()
         for experiment in Experiment.objects.select_related('domain').prefetch_related('treatment').filter(active=1):
             experiment_domain = experiment.domain.slug
+            experiment_domain_map[experiment.slug] = experiment_domain
             if experiment_domain not in domains:
                 domains[experiment_domain] = []
             for bucket_set in experiment.buckets.split(','):
@@ -41,8 +44,9 @@ class HonestABResolver(object):
 
         self.domains = {k: sorted(v) for k, v in domains}
         self.treatments = treatments
+        self.experiment_domain_map = experiment_domain_map
 
-    def __getitem__(self, experiment_domain):
+    def __getitem__(self, experiment):
         """
         Look up value of given domain/experiment then:
             - log that we did it.
@@ -50,6 +54,13 @@ class HonestABResolver(object):
 
         todo: accept multiple things here?
         """
+
+        if experiment not in self.experiment_domain_map:
+            # TODO - log failure
+            return None
+
+        experiment_domain = self.experiment_domain_map[experiment]
+
         if (datetime.now() - self.load_time).total_seconds() > 60:  # TODO: make setting.
             self.load()
 

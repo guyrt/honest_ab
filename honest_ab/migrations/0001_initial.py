@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import honest_ab.models
 
 
 class Migration(migrations.Migration):
@@ -23,7 +22,6 @@ class Migration(migrations.Migration):
                 ('percentage_of_traffic', models.FloatField(default=100.0, verbose_name='Percentage of eligible traffic to be assigned to this experiment.  Takes floating point value between 0 and 100')),
                 ('buckets', models.CharField(max_length=255)),
             ],
-            bases=(honest_ab.models.SlugReplacementMixin, models.Model),
         ),
         migrations.CreateModel(
             name='ExperimentDomain',
@@ -35,9 +33,8 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text=b'Human readable name.', max_length=128)),
                 ('slug', models.SlugField(help_text=b'Used as salt. Must be unique.', unique=True, max_length=64)),
                 ('num_buckets', models.PositiveIntegerField(default=1000)),
-                ('experimental_unit_resolver', models.CharField(max_length=255)),
+                ('experimental_unit_resolver', models.CharField(default=b'honest_ab.unit_resolvers.cookie_resolver', max_length=255)),
             ],
-            bases=(honest_ab.models.SlugReplacementMixin, models.Model),
         ),
         migrations.CreateModel(
             name='Goal',
@@ -49,7 +46,6 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=128)),
                 ('slug', models.SlugField(unique=True, max_length=64)),
             ],
-            bases=(honest_ab.models.SlugReplacementMixin, models.Model),
         ),
         migrations.CreateModel(
             name='GoalAchieved',
@@ -66,8 +62,8 @@ class Migration(migrations.Migration):
                 ('active', models.BooleanField(default=True)),
                 ('date_added', models.DateTimeField(auto_now_add=True)),
                 ('date_modified', models.DateTimeField(auto_now=True)),
-                ('percentage_of_traffic', models.FloatField(default=None, verbose_name=b'By default, this is set to 1/N for N treatments in an experiment')),
                 ('name', models.CharField(max_length=255)),
+                ('experiment', models.ForeignKey(to='honest_ab.Experiment')),
             ],
         ),
         migrations.AddField(

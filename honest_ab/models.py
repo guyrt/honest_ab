@@ -1,19 +1,7 @@
 from django.db import models
-from django.template.defaultfilters import slugify
 
 
-class SlugReplacementMixin(object):
-
-    def save(self, force_insert=False, force_update=False, using=None):
-        if not self.slug:
-            self.slug = slugify(self.name)
-            i = 0
-            while self.__class__.objects.filter(slug=self.slug).exists():
-                self.slug = slugify(self.name) + '_' + str(i)
-        super(SlugReplacementMixin, self).save(force_insert, force_update, using)
-
-
-class ExperimentDomain(SlugReplacementMixin, models.Model):
+class ExperimentDomain(models.Model):
     """
     An experiment domain is a set of experiments that are non-overlapping. A model
     can only be associated with one experiment in an experiment domain.
@@ -28,13 +16,13 @@ class ExperimentDomain(SlugReplacementMixin, models.Model):
     slug = models.SlugField(max_length=64, unique=True, help_text="Used as salt. Must be unique.")
     num_buckets = models.PositiveIntegerField(default=1000)
 
-    experimental_unit_resolver = models.CharField(max_length=255)
+    experimental_unit_resolver = models.CharField(max_length=255, default='honest_ab.unit_resolvers.cookie_resolver')
 
     def __unicode__(self):
-        return "domain {0} using {1}".format(self.name, self.decision_class)
+        return "domain {0} using {1}".format(self.name, self.experimental_unit_resolver)
 
 
-class Experiment(SlugReplacementMixin, models.Model):
+class Experiment(models.Model):
     """
     An experiment is a single test. It requires a decision class, which is used
     to partition models into the experiment.
@@ -55,10 +43,10 @@ class Experiment(SlugReplacementMixin, models.Model):
     )
 
     domain = models.ForeignKey(ExperimentDomain)
-    buckets = models.CharField(max_length=255)  # todo - set these on save?
+    buckets = models.CharField(max_length=255)
 
     def __unicode__(self):
-        return self.slug
+        return self.slug + "  " + self.buckets
 
 
 class Treatment(models.Model):
@@ -67,20 +55,17 @@ class Treatment(models.Model):
 
     date_added = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
-
-    percentage_of_traffic = models.FloatField(
-        verbose_name="By default, this is set to 1/N for N treatments in an experiment",
-        default=None
-    )
-
     name = models.CharField(max_length=255)
+
+    experiment = models.ForeignKey(Experiment)
+
 
 """
 Handle goals, which is an optional feature for tracking specific actions.
 """
 
 
-class Goal(SlugReplacementMixin, models.Model):
+class Goal(models.Model):
     """
     Explicit goal for an experiment. An example might be clicking an element on the page or
     creating a blog post.
